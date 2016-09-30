@@ -226,7 +226,7 @@ config.configFile(process.argv[2], function (config) {
         if (metrics[midx].length === 0) {
           continue;
         }
-        metricsStr = metrics[midx].toString();
+        var metricsStr = metrics[midx].toString();
         counters[metrics_received]++;
         if (config.dumpMessages) {
           l.log("STATS: " + metricsStr);

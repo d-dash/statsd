@@ -226,12 +226,22 @@ config.configFile(process.argv[2], function (config) {
         if (metrics[midx].length === 0) {
           continue;
         }
-
+        metricsStr = metrics[midx].toString();
         counters[metrics_received]++;
         if (config.dumpMessages) {
-          l.log(metrics[midx].toString());
+          l.log("STATS: " + metricsStr);
         }
-        var bits = metrics[midx].toString().split(':');
+        if (metricStr.indexOf('_sc') === 0 || metricStr.indexOf('_e') === 0) {
+          // statsd doesn't support service checks or events.
+          continue;
+        }
+        
+        // dogstatsd sends data in the form <stats>|#tags
+        // the tags are not supported by statsd. So...
+        // chomp all the tags to make the event statsd compliant.
+        metricStr = metricStr.replace(/|#.*/, ''); 
+        
+        var bits = metricsStr.split(':');
         var key = sanitizeKeyName(bits.shift());
 
         if (keyFlushInterval > 0) {
@@ -249,7 +259,7 @@ config.configFile(process.argv[2], function (config) {
           var sampleRate = 1;
           var fields = bits[i].split("|");
           if (!helpers.is_valid_packet(fields)) {
-              l.log('Bad line: ' + fields + ' in msg "' + metrics[midx] +'"');
+              l.log('Bad line: ' + fields + ' in msg "' + metricStr +'"');
               counters[bad_lines_seen]++;
               stats.messages.bad_lines_seen++;
               continue;
